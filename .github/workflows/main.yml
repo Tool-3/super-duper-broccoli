@@ -1,0 +1,36 @@
+name: OCR Workflow
+
+on:
+  push:
+    paths:
+      - 'input_files/**'
+  workflow_dispatch:
+
+jobs:
+  ocr:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y tesseract-ocr
+        pip install -r requirements.txt
+    
+    - name: Run OCR script
+      run: python ocr_script.py --input input_files --output output_texts
+    
+    - name: Commit results
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add output_texts/
+        git commit -m "Add OCR results" -a || echo "No changes to commit"
+        git push
